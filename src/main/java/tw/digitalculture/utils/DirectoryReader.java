@@ -15,52 +15,52 @@ import java.util.List;
  *
  * @author Jonathan
  */
-public class DirReader {
+public class DirectoryReader {
 
     private String path;
     private boolean subDir = false;
-    public List<File> files = new ArrayList<>();
-//
+    public List<File> files;
 
+//
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
-        DirReader dr = new DirReader("D:\\Google Drive\\Google Photos", true);
+        DirectoryReader dr = new DirectoryReader("D:\\Google Drive\\Google Photos", true);
         for (File f : dr.files) {
             System.out.print(f.getPath());
             //     System.out.println(f.getParent() + " " + f.getName());
-            System.out.printf(" = %.1f kbytes.\n", f.length() / 1024.0);
+            //System.out.printf(" = %.1f kbytes.\n", f.length() / 1024.0);
             System.out.printf("= %.1f kbytes. [%s]\n", f.length() / 1024.0, MD5Utils.getChecksum(f.getPath()));
         }
         System.out.println("Total: " + dr.files.size() + " files.");
     }
 //
 
-    public DirReader(String path, boolean subDir) {
+    public DirectoryReader(String path, boolean subDir) {
+        System.out.println("Reading Directory: " + path);
+        System.out.println("Including Sub-Directories: " + subDir);
         this.path = path;
         this.subDir = subDir;
         refresh();
     }
 
-    public DirReader(String path) {
+    public DirectoryReader(String path) {
         this(path, false);
     }
 
     public final void refresh() {
-        this.files = getDir(this.path);
+        System.out.println("Checkpoint: refresh()");
+        files = new ArrayList<>();
+        getDir(this.path);
     }
 
-    private List<File> getDir(String path) {
-        File[] fileList = new File(path).listFiles();
-        ArrayList<File> file_pool = new ArrayList<>();
-
-        for (int i = 0; i < fileList.length; i++) {
-            if (fileList[i].isFile()) {
-                file_pool.add(fileList[i]);
-                //System.out.println("File " + listOfFiles[i].getPath());
-            } else if (fileList[i].isDirectory() && subDir) {
-                file_pool.addAll(getDir(fileList[i].getPath()));
+    private void getDir(String path) {
+        for (File f : (new File(path)).listFiles()) {
+            if (f.isFile()) {
+                files.add(f);
+            } else if (f.isDirectory() && subDir) {
+                getDir(f.getPath());
             }
         }
-        return file_pool;
+        System.out.println("Checkpoint: getDir(), path = " + path);
     }
 
     /**

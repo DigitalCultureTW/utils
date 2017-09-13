@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package tw.digitalculture.utils;
+package tw.digitalculture.test;
 
 import javax.swing.*;
 import java.awt.event.*;

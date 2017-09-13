@@ -72,7 +72,7 @@ public class CSVUtils {
             first = false;
         }
 
-        System.out.println(sb.toString());  // Console output
+        //System.out.println(sb.toString());  // Console output
 
         sb.append("\n");
         w.append(sb.toString());

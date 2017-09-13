@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -14,8 +15,9 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import tw.digitalculture.utils.CSVUtils;
-import tw.digitalculture.utils.DirReader;
+import tw.digitalculture.utils.DirectoryReader;
 import tw.digitalculture.utils.MD5Utils;
+import tw.digitalculture.utils.ProgressBarUtil;
 
 /**
  * 臺中學資料庫檔名匯入工具
@@ -38,9 +40,13 @@ public class Main {
         UIManager.put("OptionPane.buttonFont", font);
         UIManager.put("OptionPane.minimumSize", new Dimension(400, 120));
         try {
+            System.out.println("Reading Directories...");
             readDirectories();
+            System.out.println("Setting Filter...");
             setFilter();
+            System.out.println("Retrieving Checksum...");
             retrieveChecksum();
+            System.out.println("Writing CSV...");
             outputCSV();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e.getMessage(), APP_TITLE, JOptionPane.PLAIN_MESSAGE);
@@ -61,6 +67,8 @@ public class Main {
         JFileChooser fc = new JFileChooser(path);
         fc.setPreferredSize(new Dimension(800, 600));
         setFont(fc.getComponents());
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+        fc.setLocation(dim.width / 2 - fc.getSize().width / 2, dim.height / 2 - fc.getSize().height / 2);
         fc.setDialogTitle(title);
         fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         int returnVal = fc.showOpenDialog(null);
@@ -81,16 +89,17 @@ public class Main {
         }
         int returnVal = JOptionPane.showConfirmDialog(null, "是否包含子目錄？", APP_TITLE, JOptionPane.YES_NO_CANCEL_OPTION,
                 JOptionPane.QUESTION_MESSAGE);
-        DirReader dr;
+        DirectoryReader dr;
         switch (returnVal) {
             case JOptionPane.CANCEL_OPTION:
                 throw new Exception("使用者中止操作。");
             case JOptionPane.YES_OPTION:
-                dr = new DirReader(dir, true);
+                dr = new DirectoryReader(dir, true);
                 break;
             default:
-                dr = new DirReader(dir);
+                dr = new DirectoryReader(dir);
         }
+
         dr.files.forEach((f) -> {
             items.add(new Item(f.getParent(), f.getName(), f.length()));
         });
@@ -107,9 +116,15 @@ public class Main {
 
     private static void retrieveChecksum() throws Exception {
         try {
+            double progressUnit = 100.0 / items.size();
+            double progress = 0.0;
+            ProgressBarUtil pb = new ProgressBarUtil(APP_TITLE, "處理中...");
             for (Item i : items) {
                 i.setChecksumMD5(MD5Utils.getChecksum(i.getPath() + "\\" + i.getFilename()));
+                progress += progressUnit;
+                pb.setProgress((int) progress);
             }
+            pb.close();
         } catch (IOException | NoSuchAlgorithmException e) {
             throw new Exception("發生不明原因的錯誤。\n" + e.getMessage());
         }
@@ -141,8 +156,10 @@ public class Main {
 
     private static boolean isFile(String filename) {
         if (new File(filename).isFile()) {
-            JOptionPane.showMessageDialog(null, "該檔名已存在，請重新指定檔名。", APP_TITLE, JOptionPane.ERROR_MESSAGE);
-            return true;
+            int overwrite = JOptionPane.showConfirmDialog(null, "該檔名已存在，是否覆蓋原檔案？", APP_TITLE, JOptionPane.YES_NO_OPTION);
+            if (overwrite == JOptionPane.NO_OPTION) {
+                return true;
+            }
         }
         return false;
     }

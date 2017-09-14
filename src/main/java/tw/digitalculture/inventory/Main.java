@@ -1,9 +1,6 @@
 package tw.digitalculture.inventory;
 
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileWriter;
@@ -18,6 +15,7 @@ import tw.digitalculture.utils.CSVUtils;
 import tw.digitalculture.utils.DirectoryReader;
 import tw.digitalculture.utils.MD5Utils;
 import tw.digitalculture.utils.ProgressBarUtil;
+import static tw.digitalculture.utils.Constants.*;
 
 /**
  * 臺中學資料庫檔名匯入工具
@@ -26,40 +24,30 @@ import tw.digitalculture.utils.ProgressBarUtil;
  */
 public class Main {
 
-    static final String APP_TITLE = "臺中學資料庫檔名批次匯入工具";
     static ArrayList<Item> items = new ArrayList<>();
     static String root;
     static String dir;
     static double filter;
+    static double minimal;
 
-    static boolean debug = true;
-    static Font font = new Font(Font.SERIF, Font.PLAIN, 20);
+    static boolean debug = false;
 
     public static void main(String[] args) {
         UIManager.put("OptionPane.messageFont", font);
         UIManager.put("OptionPane.buttonFont", font);
         UIManager.put("OptionPane.minimumSize", new Dimension(400, 120));
         try {
-            System.out.println("Reading Directories...");
+            System.out.println("* Reading Directories...");
             readDirectories();
-            System.out.println("Setting Filter...");
+            System.out.println("* Setting Filter...");
             setFilter();
-            System.out.println("Retrieving Checksum...");
+            System.out.println("* Retrieving Checksum...");
             retrieveChecksum();
-            System.out.println("Writing CSV...");
+            System.out.println("* Writing CSV...");
             outputCSV();
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, e.getMessage(), APP_TITLE, JOptionPane.PLAIN_MESSAGE);
+            JOptionPane.showMessageDialog(null, "程式中斷。", APP_TITLE, JOptionPane.ERROR_MESSAGE);
             System.exit(-1);
-        }
-    }
-
-    public static void setFont(Component[] comp) {
-        for (Component c : comp) {
-            if (c instanceof Container) {
-                setFont(((Container) c).getComponents());
-            }
-            c.setFont(font);
         }
     }
 
@@ -105,13 +93,25 @@ public class Main {
         });
     }
 
-    private static void setFilter() throws Exception {
-        /*
-        File r = new File(root);
-        for (Item i : items) {
-            System.out.println(i.toString().substring(r.getParent().length()));
-            System.out.println("[" + MD5Utils.getChecksum(i.getPath() + "\\" + i.getFilename()) + "]");
-        }*/
+    private static void setFilter() {//throws Exception {
+        String input;
+        do {
+            try {
+                input = (String) JOptionPane.showInputDialog(null, "請設定檔案大小下限(Mb): ", APP_TITLE,
+                        JOptionPane.QUESTION_MESSAGE, null, null, 0);
+                minimal = Double.parseDouble(input.trim());
+            } catch (NumberFormatException e) {
+                input = "Ex";
+            }
+        } while ("Ex".equals(input));
+        int c = 0;
+        for (int i = items.size() - 1; i >= 0; i--) {
+            if (items.get(i).getSize() < minimal * 1024 * 1024) {
+                items.remove(i);
+                c++;
+            }
+        }
+        System.out.println(c + " files have been removed from the list.");
     }
 
     private static void retrieveChecksum() throws Exception {
@@ -132,18 +132,24 @@ public class Main {
 
     private static void outputCSV() throws Exception {
         String csvDir = chooseDir(System.getProperty("user.home"), "請選擇.csv檔案輸出位置");
-        String csvFile;
+        String csvFile, path;
         do {
-            csvFile = JOptionPane.showInputDialog(null, "請輸入檔案名稱", "output.csv");
-        } while (isFile(csvDir + "\\" + csvFile));
-        System.out.println("Output path = " + csvDir + "\\" + csvFile);
-        File r = new File(root);
-        try (FileWriter writer = new FileWriter(csvDir + "\\" + csvFile)) {
+            csvFile = JOptionPane.showInputDialog(null, "請輸入檔案名稱", "output");
+            path = csvDir + "\\" + csvFile + ".csv";
+        } while (dupeFile(path));
+        int len = 0;
+        if (new File(root).getParent() == null) {
+            len = root.length() - 1;
+        } else {
+            len = new File(root).getParent().length();
+        }
+        System.out.println("Output path = " + path);
+        try (FileWriter writer = new FileWriter(path)) {
             CSVUtils.writeLine(writer, Arrays.asList("檔名", "原始路徑", "檔案大小", "MD5 Checksum"));
             for (Item i : items) {
                 CSVUtils.writeLine(writer, Arrays.asList(
                         i.getFilename(),
-                        i.getPath().substring(r.getParent().length()),
+                        i.getPath().substring(len),
                         String.valueOf(i.getSize()),
                         i.getChecksumMD5()), ',', '"');
             }
@@ -151,17 +157,13 @@ public class Main {
         } catch (IOException e) {
             throw new Exception("發生不明原因的錯誤。\n" + e.getMessage());
         }
-
+        JOptionPane.showMessageDialog(null, path + " 輸出作業完成。", APP_TITLE, JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private static boolean isFile(String filename) {
-        if (new File(filename).isFile()) {
-            int overwrite = JOptionPane.showConfirmDialog(null, "該檔名已存在，是否覆蓋原檔案？", APP_TITLE, JOptionPane.YES_NO_OPTION);
-            if (overwrite == JOptionPane.NO_OPTION) {
-                return true;
-            }
-        }
-        return false;
+    private static boolean dupeFile(String filename) {
+        return new File(filename).isFile()
+                && JOptionPane.showConfirmDialog(null, filename + " 已存在，是否覆蓋原檔案？",
+                        APP_TITLE, JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION;
     }
 
 }

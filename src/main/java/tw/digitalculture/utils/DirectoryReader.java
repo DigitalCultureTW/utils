@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package tw.digitalculture.utils;
 
 import java.io.File;
@@ -11,10 +6,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author Jonathan
- */
 public class DirectoryReader {
 
     private String path;
@@ -23,12 +14,12 @@ public class DirectoryReader {
 
 //
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
-        DirectoryReader dr = new DirectoryReader("D:\\Google Drive\\Google Photos", true);
+        DirectoryReader dr = new DirectoryReader(System.getProperty("user.home"), true);
         for (File f : dr.files) {
             System.out.print(f.getPath());
-            //     System.out.println(f.getParent() + " " + f.getName());
-            //System.out.printf(" = %.1f kbytes.\n", f.length() / 1024.0);
-            System.out.printf("= %.1f kbytes. [%s]\n", f.length() / 1024.0, MD5Utils.getChecksum(f.getPath()));
+            System.out.println(f.getParent() + " " + f.getName());
+            System.out.printf(" = %.1f kbytes.\n", f.length() / 1024.0);
+//            System.out.printf("= %.1f kbytes. [%s]\n", f.length() / 1024.0, MD5Utils.getChecksum(f.getPath()));
         }
         System.out.println("Total: " + dr.files.size() + " files.");
     }
@@ -47,20 +38,23 @@ public class DirectoryReader {
     }
 
     public final void refresh() {
-        System.out.println("Checkpoint: refresh()");
+        //System.out.println("Checkpoint: refresh()");
         files = new ArrayList<>();
         getDir(this.path);
     }
 
     private void getDir(String path) {
-        for (File f : (new File(path)).listFiles()) {
-            if (f.isFile()) {
-                files.add(f);
-            } else if (f.isDirectory() && subDir) {
-                getDir(f.getPath());
+        File obj = new File(path);
+        if (obj.exists() && obj.listFiles() != null) {
+            for (File f : obj.listFiles()) {
+                if (f.isFile()) {
+                    files.add(f);
+                } else if (f.isDirectory() && subDir) {
+                    getDir(f.getPath());
+                }
             }
         }
-        System.out.println("Checkpoint: getDir(), path = " + path);
+//        System.out.println("Checkpoint: getDir(), path = " + path);
     }
 
     /**

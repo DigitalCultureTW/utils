@@ -47,7 +47,7 @@ public class DirectoryReader {
         File obj = new File(path);
         if (obj.exists() && obj.listFiles() != null) {
             for (File f : obj.listFiles()) {
-                if (f.isFile()) {
+                if (f.isFile() && !f.isHidden()) {
                     files.add(f);
                 } else if (f.isDirectory() && subDir) {
                     getDir(f.getPath());

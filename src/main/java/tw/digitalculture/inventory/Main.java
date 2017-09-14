@@ -1,14 +1,14 @@
 package tw.digitalculture.inventory;
 
 import java.awt.Dimension;
-import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import javax.swing.JFileChooser;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import tw.digitalculture.utils.CSVUtils;
@@ -18,55 +18,44 @@ import tw.digitalculture.utils.ProgressBarUtil;
 import static tw.digitalculture.utils.Constants.*;
 
 /**
- * 臺中學資料庫檔名匯入工具
+ * 臺中學資料庫檔名批次匯入工具
  *
  * @author Jonathan Chang
  */
 public class Main {
 
+    private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
     static ArrayList<Item> items = new ArrayList<>();
     static String root;
     static String dir;
     static double filter;
     static double minimal;
 
-    static boolean debug = false;
-
-    public static void main(String[] args) {
+    static {
         UIManager.put("OptionPane.messageFont", font);
-        UIManager.put("OptionPane.buttonFont", font);
         UIManager.put("OptionPane.minimumSize", new Dimension(400, 120));
-        try {
-            System.out.println("* Reading Directories...");
-            readDirectories();
-            System.out.println("* Setting Filter...");
-            setFilter();
-            System.out.println("* Retrieving Checksum...");
-            retrieveChecksum();
-            System.out.println("* Writing CSV...");
-            outputCSV();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "程式中斷。", APP_TITLE, JOptionPane.ERROR_MESSAGE);
-            System.exit(-1);
-        }
+        UIManager.put("OptionPane.buttonFont", font);
+        UIManager.put("TextField.font", font);
     }
 
-    private static String chooseDir(String path, String title) throws Exception {
-        JFileChooser fc = new JFileChooser(path);
-        fc.setPreferredSize(new Dimension(800, 600));
-        setFont(fc.getComponents());
-        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-        fc.setLocation(dim.width / 2 - fc.getSize().width / 2, dim.height / 2 - fc.getSize().height / 2);
-        fc.setDialogTitle(title);
-        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        int returnVal = fc.showOpenDialog(null);
-        if (returnVal == JFileChooser.CANCEL_OPTION) {
-            throw new Exception("使用者中止操作。");
+    public static void main(String[] args) {
+        messageWindow(APP_TITLE + ", 版本:" + APP_VERSION, 2000);
+        LOGGER.log(Level.INFO, APP_TITLE + ", 版本:" + APP_VERSION);
+        try {
+            LOGGER.log(Level.INFO, "*** Reading Directories...");
+            readDirectories();
+            LOGGER.log(Level.INFO, "*** Setting Filter...");
+            setFilter();
+            LOGGER.log(Level.INFO, "*** Retrieving Checksum...");
+            retrieveChecksum();
+            LOGGER.log(Level.INFO, "*** Writing CSV...");
+            outputCSV();
+        } catch (Exception e) {
+            String message = e.getMessage() == null ? "程式中斷。" : e.getMessage();
+            LOGGER.log(Level.WARNING, message);
+            messageWindow(message, 2000);
+            System.exit(-1);
         }
-        if (debug) {
-            System.out.println(fc.getSelectedFile().getPath());
-        }
-        return fc.getSelectedFile().getPath();
     }
 
     private static void readDirectories() throws Exception {
@@ -91,27 +80,48 @@ public class Main {
         dr.files.forEach((f) -> {
             items.add(new Item(f.getParent(), f.getName(), f.length()));
         });
+        LOGGER.log(Level.INFO, "{0} files have been located.", items.size());
     }
 
-    private static void setFilter() {//throws Exception {
+    private static void setFilter() {
         String input;
         do {
             try {
-                input = (String) JOptionPane.showInputDialog(null, "請設定檔案大小下限(Mb): ", APP_TITLE,
-                        JOptionPane.QUESTION_MESSAGE, null, null, 0);
+                input = (String) JOptionPane.showInputDialog(null, "請設定檔案大小下限(Mb, 0為不設限): ", APP_TITLE,
+                        JOptionPane.PLAIN_MESSAGE, null, null, 0);
                 minimal = Double.parseDouble(input.trim());
             } catch (NumberFormatException e) {
                 input = "Ex";
             }
         } while ("Ex".equals(input));
-        int c = 0;
-        for (int i = items.size() - 1; i >= 0; i--) {
-            if (items.get(i).getSize() < minimal * 1024 * 1024) {
-                items.remove(i);
-                c++;
+        input = (String) JOptionPane.showInputDialog(null, "請設定選取檔案類型，以分號隔開(如jpg;png): ", APP_TITLE,
+                JOptionPane.PLAIN_MESSAGE);
+        ArrayList<String> filetype = new ArrayList<>();
+        for (String s : input.split(";")) {
+            if (!s.isEmpty()) {
+                filetype.add(s.trim());
             }
         }
-        System.out.println(c + " files have been removed from the list.");
+        if (minimal > 0 || filetype.size() > 0) {
+            LOGGER.log(Level.INFO, "Filter: size > {0} Mb, filetype: {1}", new Object[]{minimal, filetype.toString()});
+            int c = 0;
+            CheckItems:
+            for (int i = items.size() - 1; i >= 0; i--) {
+                if (items.get(i).getSize() < minimal * 1024 * 1024) {
+                    items.remove(i);
+                    c++;
+                } else if (filetype.size() > 0) {
+                    for (String type : filetype) {
+                        if (items.get(i).getFilename().endsWith("." + type)) {
+                            continue CheckItems;
+                        }
+                    }
+                    items.remove(i);
+                    c++;
+                }
+            }
+            LOGGER.log(Level.INFO, "{0} files have been removed from the list.", c);
+        }
     }
 
     private static void retrieveChecksum() throws Exception {
@@ -131,6 +141,9 @@ public class Main {
     }
 
     private static void outputCSV() throws Exception {
+        if (items.isEmpty()) {
+            throw new Exception("找不到符合條件的檔案，請重新操作。");
+        }
         String csvDir = chooseDir(System.getProperty("user.home"), "請選擇.csv檔案輸出位置");
         String csvFile, path;
         do {
@@ -143,7 +156,7 @@ public class Main {
         } else {
             len = new File(root).getParent().length();
         }
-        System.out.println("Output path = " + path);
+        LOGGER.log(Level.INFO, "Output path = {0}", path);
         try (FileWriter writer = new FileWriter(path)) {
             CSVUtils.writeLine(writer, Arrays.asList("檔名", "原始路徑", "檔案大小", "MD5 Checksum"));
             for (Item i : items) {
@@ -165,5 +178,4 @@ public class Main {
                 && JOptionPane.showConfirmDialog(null, filename + " 已存在，是否覆蓋原檔案？",
                         APP_TITLE, JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION;
     }
-
 }

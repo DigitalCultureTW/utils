@@ -9,7 +9,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JWindow;
 import javax.swing.SwingConstants;
-import static tw.digitalculture.utils.Constants.font;
 
 /**
  *
@@ -18,43 +17,52 @@ import static tw.digitalculture.utils.Constants.font;
 public class Constants {
 
     public static final String APP_TITLE = "臺中學資料庫檔名批次匯入工具";
-    public static final String APP_VERSION = "1.0";
-    public static Font font = new Font(Font.MONOSPACED, Font.BOLD, 20);
-    public static Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+    public static final String APP_VERSION = "1.01";
+    public static final Font SYS_FONT = new Font(Font.MONOSPACED, Font.BOLD, 20);
+    public static final Dimension SCREEN_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
 
     public static void setFont(Component[] comp) {
         for (Component c : comp) {
             if (c instanceof Container) {
                 setFont(((Container) c).getComponents());
             }
-            c.setFont(font);
+            c.setFont(SYS_FONT);
         }
     }
 
     public static void messageWindow(String message, int time) {
+        messageWindow(message, () -> {
+            try {
+                Thread.sleep(time);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    public static void messageWindow(String message, Runnable f) {
         JWindow window = new JWindow();
         window.getContentPane().add(new JLabel(message, SwingConstants.CENTER));
         window.setSize(500, 150);
         setFont(window.getComponents());
-        window.setLocation((dim.width - window.getSize().width) / 2, (dim.height - window.getSize().height) / 2);
+        window.setLocation((SCREEN_SIZE.width - window.getSize().width) / 2, (SCREEN_SIZE.height - window.getSize().height) / 2);
         window.setVisible(true);
         try {
-            Thread.sleep(time);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            f.run();
+        } finally {
+            window.setVisible(false);
+            window.dispose();
         }
-        window.setVisible(false);
-        window.dispose();
     }
 
     public static String chooseDir(String path, String title) throws Exception {
         JFileChooser fc = new JFileChooser(path);
         fc.setPreferredSize(new Dimension(800, 600));
         setFont(fc.getComponents());
-        fc.setLocation((dim.width - fc.getSize().width) / 2, (dim.height - fc.getSize().height) / 2);
+        fc.setLocation((SCREEN_SIZE.width - fc.getSize().width) / 2, (SCREEN_SIZE.height - fc.getSize().height) / 2);
         fc.setDialogTitle(title);
         fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        int returnVal = fc.showOpenDialog(null);
+        int returnVal = fc.showDialog(null, "Select");
         if (returnVal == JFileChooser.CANCEL_OPTION) {
             throw new Exception("使用者中止操作。");
         }

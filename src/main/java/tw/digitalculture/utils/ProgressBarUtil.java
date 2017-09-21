@@ -38,7 +38,7 @@ public class ProgressBarUtil extends JDialog {
         progressBar.setValue(0);
         progressBar.setStringPainted(true);
         Border border = BorderFactory.createTitledBorder(null, description,
-                TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, font);
+                TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, SYS_FONT);
         progressBar.setBorder(border);
         this.add(progressBar);
         this.setVisible(true);
@@ -50,7 +50,7 @@ public class ProgressBarUtil extends JDialog {
                 setFont(((Container) comp[x]).getComponents());
             }
             try {
-                comp[x].setFont(font);
+                comp[x].setFont(SYS_FONT);
             } catch (Exception e) {
             }//do nothing
         }

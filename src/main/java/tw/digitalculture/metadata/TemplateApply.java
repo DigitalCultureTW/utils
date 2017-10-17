@@ -2,12 +2,13 @@ package tw.digitalculture.metadata;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -38,15 +39,17 @@ public class TemplateApply {
     }
 
     private void readFile(Consumer<List<List<String>>> cb) throws Exception {
-        source_file = FileChooser.chooseFile(
-                System.getProperty("user.home"), "請選擇資料來源");
+        source_file = FileChooser.chooseFile(System.getProperty("user.dir"),
+                "請選擇資料來源", new String[]{"csv", "Data source (.csv)"}, "Open");
         CSVReaderUtils.readFile(source_file, cb);
     }
 
     private List<String> applyTemplate(List<List<String>> table)
-            throws FileNotFoundException, IOException {
-        String path = System.getProperty("user.dir")
-                + "\\src\\main\\resources\\template";
+            throws FileNotFoundException, IOException, Exception {
+        File f = new File(System.getProperty("user.dir") + "\\src\\main\\resources\\template");
+        String path = (f.exists()) ? f.getPath() : FileChooser.chooseFile(
+                System.getProperty("user.dir"), "請選擇樣版檔案",
+                new String[]{"", "樣版(String format)"}, "Open");
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(path), "UTF-8"))) {
             template = "";
@@ -61,18 +64,22 @@ public class TemplateApply {
         }
         System.out.println(template);
         List<String> result = new ArrayList<>();
-        table.forEach((List<String> t) -> {
-            String r = String.format(template, t.toArray());
-            result.add(r);
+        table.forEach((List<String> row) -> {
+            result.add(String.format(template, row.toArray()));
         });
         return result;
     }
 
     private void writeFile(List<String> result) throws IOException, Exception {
-        try (FileWriter fw = new FileWriter(FileChooser.chooseFile(
-                System.getProperty("user.home"), "請選擇寫入檔名"));
-                BufferedWriter writer = new BufferedWriter(fw)) {
+        String path = FileChooser.chooseFile(System.getProperty("user.home"),
+                "請選擇寫入檔名", new String[]{"csv", "csv檔案"}, "Save");
+        if (!path.toLowerCase().endsWith(".csv")) {
+            path += ".csv";
+        }
+        try (BufferedWriter writer = new BufferedWriter(
+                new OutputStreamWriter(new FileOutputStream(path)))) {
             result.forEach((String t) -> {
+                System.out.println(t + "\n");
                 try {
                     writer.append("\"" + t + "\"\n");
                 } catch (IOException ex) {

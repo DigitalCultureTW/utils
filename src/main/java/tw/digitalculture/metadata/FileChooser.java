@@ -18,22 +18,24 @@ import static tw.digitalculture.utils.Constants.setFont;
  */
 public class FileChooser {
 
-    public static String chooseFile(String path, String title)
-            throws Exception {
+    public static String chooseFile(String path, String title,
+            String[] filter, String button_text) throws Exception {
         JFileChooser fc = new JFileChooser(path);
         fc.setPreferredSize(new Dimension(800, 600));
         setFont(fc.getComponents());
-        fc.setLocation((SCREEN_SIZE.width - fc.getSize().width) / 2, (SCREEN_SIZE.height - fc.getSize().height) / 2);
+        fc.setLocation((SCREEN_SIZE.width - fc.getSize().width) / 2,
+                (SCREEN_SIZE.height - fc.getSize().height) / 2);
         fc.setDialogTitle(title);
+        fc.setApproveButtonText(button_text);
         fc.setFileFilter(new FileFilter() {
             @Override
             public boolean accept(File f) {
-                return f.getName().toLowerCase().endsWith(".csv");
+                return f.isDirectory() || f.getName().toLowerCase().endsWith(filter[0]);
             }
 
             @Override
             public String getDescription() {
-                return "Data source (.csv)";
+                return filter[1];
             }
         });
         int returnVal = fc.showOpenDialog(null);

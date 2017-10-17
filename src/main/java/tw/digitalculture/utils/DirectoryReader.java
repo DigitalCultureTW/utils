@@ -25,6 +25,12 @@ public class DirectoryReader {
     }
 //
 
+    /**
+     * Directory Reader.
+     *
+     * @param path Specify the folder to be read.
+     * @param subDir Specify if sub-directories included.
+     */
     public DirectoryReader(String path, boolean subDir) {
         System.out.println("Reading Directory: " + path);
         System.out.println("Including Sub-Directories: " + subDir);
@@ -33,6 +39,11 @@ public class DirectoryReader {
         refresh();
     }
 
+    /**
+     * Directory Reader, sub-directories not included.
+     *
+     * @param path Specify the folder to be read.
+     */
     public DirectoryReader(String path) {
         this(path, false);
     }

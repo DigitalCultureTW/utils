@@ -11,7 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
-import tw.digitalculture.utils.CSVUtils;
+import tw.digitalculture.utils.CSVWriterUtils;
 import tw.digitalculture.utils.DirectoryReader;
 import tw.digitalculture.utils.MD5Utils;
 import tw.digitalculture.utils.ProgressBarUtil;
@@ -158,9 +158,9 @@ public class Main {
         }
         LOGGER.log(Level.INFO, "Output path = {0}", path);
         try (FileWriter writer = new FileWriter(path)) {
-            CSVUtils.writeLine(writer, Arrays.asList("檔名", "原始路徑", "檔案大小", "MD5 Checksum"));
+            CSVWriterUtils.writeLine(writer, Arrays.asList("檔名", "原始路徑", "檔案大小", "MD5 Checksum"));
             for (Item i : items) {
-                CSVUtils.writeLine(writer, Arrays.asList(
+                CSVWriterUtils.writeLine(writer, Arrays.asList(
                         i.getFilename(),
                         i.getPath().substring(len),
                         String.valueOf(i.getSize()),

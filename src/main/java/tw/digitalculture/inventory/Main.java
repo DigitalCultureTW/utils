@@ -28,18 +28,25 @@ public class Main {
     static ArrayList<Item> items = new ArrayList<>();
     static String root;
     static String dir;
+    /**
+     * File type filter
+     */
     static double filter;
+    /**
+     * Minimal file size.
+     *
+     */
     static double minimal;
 
     static {
-        UIManager.put("OptionPane.messageFont", font);
+        UIManager.put("OptionPane.messageFont", SYS_FONT);
         UIManager.put("OptionPane.minimumSize", new Dimension(400, 120));
-        UIManager.put("OptionPane.buttonFont", font);
-        UIManager.put("TextField.font", font);
+        UIManager.put("OptionPane.buttonFont", SYS_FONT);
+        UIManager.put("TextField.font", SYS_FONT);
     }
 
     public static void main(String[] args) {
-        messageWindow(APP_TITLE + ", 版本:" + APP_VERSION, 2000);
+        messageWindow(APP_TITLE + ", 版本:" + APP_VERSION, 1500);
         LOGGER.log(Level.INFO, APP_TITLE + ", 版本:" + APP_VERSION);
         try {
             LOGGER.log(Level.INFO, "*** Reading Directories...");
@@ -51,9 +58,9 @@ public class Main {
             LOGGER.log(Level.INFO, "*** Writing CSV...");
             outputCSV();
         } catch (Exception e) {
-            String message = e.getMessage() == null ? "程式中斷。" : e.getMessage();
+            String message = (e.getMessage() == null) ? "程式中斷。" : e.getMessage();
+            messageWindow(message, 1500);
             LOGGER.log(Level.WARNING, message);
-            messageWindow(message, 2000);
             System.exit(-1);
         }
     }
@@ -66,21 +73,26 @@ public class Main {
         }
         int returnVal = JOptionPane.showConfirmDialog(null, "是否包含子目錄？", APP_TITLE, JOptionPane.YES_NO_CANCEL_OPTION,
                 JOptionPane.QUESTION_MESSAGE);
-        DirectoryReader dr;
+        boolean inclSubDir;
         switch (returnVal) {
             case JOptionPane.CANCEL_OPTION:
                 throw new Exception("使用者中止操作。");
             case JOptionPane.YES_OPTION:
-                dr = new DirectoryReader(dir, true);
+                inclSubDir = true;
                 break;
             default:
-                dr = new DirectoryReader(dir);
+                inclSubDir = false;
         }
-
-        dr.files.forEach((f) -> {
-            items.add(new Item(f.getParent(), f.getName(), f.length()));
+        messageWindow("檔案讀取中，請稍候 . . . ", () -> {
+            DirectoryReader dr = new DirectoryReader(dir, inclSubDir);
+            dr.files.forEach((f) -> {
+                items.add(new Item(f.getParent(), f.getName(), f.length()));
+            });
+            LOGGER.log(Level.INFO, "{0} files have been located.", items.size());
         });
-        LOGGER.log(Level.INFO, "{0} files have been located.", items.size());
+        if (items.isEmpty()) {
+            throw new Exception("所指定目錄中找不到檔案。");
+        }
     }
 
     private static void setFilter() {
@@ -96,31 +108,32 @@ public class Main {
         } while ("Ex".equals(input));
         input = (String) JOptionPane.showInputDialog(null, "請設定選取檔案類型，以分號隔開(如jpg;png): ", APP_TITLE,
                 JOptionPane.PLAIN_MESSAGE);
-        ArrayList<String> filetype = new ArrayList<>();
+        ArrayList<String> filetypefilter = new ArrayList<>();
         for (String s : input.split(";")) {
             if (!s.isEmpty()) {
-                filetype.add(s.trim());
+                s = s.startsWith(".") ? s.substring(1) : s;
+                filetypefilter.add(s.trim());
             }
         }
-        if (minimal > 0 || filetype.size() > 0) {
-            LOGGER.log(Level.INFO, "Filter: size > {0} Mb, filetype: {1}", new Object[]{minimal, filetype.toString()});
-            int c = 0;
-            CheckItems:
-            for (int i = items.size() - 1; i >= 0; i--) {
-                if (items.get(i).getSize() < minimal * 1024 * 1024) {
-                    items.remove(i);
-                    c++;
-                } else if (filetype.size() > 0) {
-                    for (String type : filetype) {
-                        if (items.get(i).getFilename().endsWith("." + type)) {
-                            continue CheckItems;
-                        }
-                    }
-                    items.remove(i);
-                    c++;
-                }
-            }
-            LOGGER.log(Level.INFO, "{0} files have been removed from the list.", c);
+
+        int c = items.size();
+        if (minimal > 0) {
+            LOGGER.log(Level.INFO, "Filter: size > {0} Mb", minimal);
+            items.removeIf((Item i) -> {
+                return i.getSize() < minimal * 1024 * 1024;
+            });
+        }
+
+        if (filetypefilter.size() > 0) {
+            LOGGER.log(Level.INFO, "Filter: type(s) = {0}", filetypefilter);
+            items.removeIf((Item i) -> {
+                return filetypefilter.stream().noneMatch(
+                        (type) -> (i.getFilename().endsWith("." + type)));
+            });
+        }
+
+        if (c - items.size() > 0) {
+            LOGGER.log(Level.INFO, "{0} files have been removed from the list.", c - items.size());
         }
     }
 

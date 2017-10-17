@@ -9,7 +9,7 @@ import java.awt.Dimension;
 import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
-import static tw.digitalculture.utils.Constants.dim;
+import static tw.digitalculture.utils.Constants.SCREEN_SIZE;
 import static tw.digitalculture.utils.Constants.setFont;
 
 /**
@@ -23,8 +23,7 @@ public class FileChooser {
         JFileChooser fc = new JFileChooser(path);
         fc.setPreferredSize(new Dimension(800, 600));
         setFont(fc.getComponents());
-        fc.setLocation((dim.width - fc.getSize().width) / 2,
-                (dim.height - fc.getSize().height) / 2);
+        fc.setLocation((SCREEN_SIZE.width - fc.getSize().width) / 2, (SCREEN_SIZE.height - fc.getSize().height) / 2);
         fc.setDialogTitle(title);
         fc.setFileFilter(new FileFilter() {
             @Override

@@ -1,26 +1,25 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package tw.digitalculture.metadata;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import org.apache.sanselan.common.byteSources.ByteSource;
-import org.apache.sanselan.common.byteSources.ByteSourceFile;
-import org.apache.sanselan.formats.jpeg.JpegImageParser;
-import org.apache.sanselan.formats.jpeg.exifRewrite.ExifRewriter;
-import org.apache.sanselan.formats.tiff.TiffField;
-import org.apache.sanselan.formats.tiff.TiffImageMetadata;
-import org.apache.sanselan.formats.tiff.constants.TagInfo;
-import org.apache.sanselan.formats.tiff.constants.TiffFieldTypeConstants;
-import org.apache.sanselan.formats.tiff.write.TiffOutputDirectory;
-import org.apache.sanselan.formats.tiff.write.TiffOutputSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.imaging.ImageReadException;
+import org.apache.commons.imaging.ImageWriteException;
+import org.apache.commons.imaging.common.bytesource.ByteSource;
+import org.apache.commons.imaging.common.bytesource.ByteSourceFile;
+import org.apache.commons.imaging.formats.jpeg.JpegImageParser;
+import org.apache.commons.imaging.formats.jpeg.exif.ExifRewriter;
+import org.apache.commons.imaging.formats.tiff.TiffField;
+import org.apache.commons.imaging.formats.tiff.TiffImageMetadata;
+import org.apache.commons.imaging.formats.tiff.constants.TiffDirectoryType;
+import org.apache.commons.imaging.formats.tiff.fieldtypes.FieldType;
+import org.apache.commons.imaging.formats.tiff.taginfos.TagInfo;
+import org.apache.commons.imaging.formats.tiff.taginfos.TagInfoShort;
+import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
+import static tw.digitalculture.utils.Constants.chooseDir;
+import tw.digitalculture.utils.DirectoryReader;
 
 /**
  *
@@ -31,44 +30,83 @@ public class CorrectExif {
     static String photo_path = System.getProperty("user.dir")
             + "\\src\\main\\resources\\original_photo.JPG";
 
-    public static void main(String[] args) throws Exception {
+    File src_file;
+    String target_dir;
+    TiffImageMetadata tim;
+    JpegImageParser jip = new JpegImageParser();
 
-        String path = photo_path;
-//                FileChooser.chooseFile(System.getProperty("user.home"),
+    public static void main(String[] args) throws Exception {
+        String d = chooseDir(System.getProperty("user.home"), "請選擇批次目錄");
+        String t = chooseDir(System.getProperty("user.home"), "請選擇寫出目錄");
+        DirectoryReader dr = new DirectoryReader(d, false);
+        dr.files.forEach((File f) -> {
+            if (f.getName().toLowerCase().endsWith("jpg")) {
+                try {
+                    CorrectExif ce = new CorrectExif(f, t);
+                    int orientation = ce.getOrientation();
+                    ce.correctOrientation((byte) 0);
+                } catch (Exception ex) {
+                    Logger.getLogger(CorrectExif.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+//        String dir = DirectoryReader.chooseFile(System.getProperty("user.home"),
 //                "請選擇影像檔", new String[]{"jpg", "jpg影像"}, "Open");
-        JpegImageParser jip = new JpegImageParser();
-        File f = new File(path);
-        ByteSource bs = new ByteSourceFile(f);
-        Map params = new HashMap();
-        TiffImageMetadata tim = jip.getExifMetadata(bs, params);
-//        List data = tim.getAllFields();
-//        data.forEach((t) -> {
-//            System.out.println(t);
-//        });
-//        TiffField tf = 
-        tim.findField(new TagInfo("Orientation", 274,
-                TiffFieldTypeConstants.FIELD_TYPE_SHORT)).valueOffsetBytes[1] = 0;
-//        System.out.println(tf);
-//        for (byte b : tf.valueOffsetBytes) {
+//                   "C:\\Users\\Jonathan Chang\\Desktop\\competition\\大專組-第二名-A0118-楊天助-媽祖起駕.JPG";
+    }
+
+    public CorrectExif(File f, String t) throws Exception {
+        System.out.println("path=" + f.getPath());
+        this.src_file = f;
+        this.target_dir = t;
+        ByteSource bs = new ByteSourceFile(src_file);
+        this.tim = jip.getExifMetadata(bs, null);
+    }
+
+    public int getOrientation() throws ImageReadException {
+        TiffField tf = tim.findField(new TagInfo("Orientation", 274,
+                FieldType.SHORT) {
+        });
+        System.out.println(tf);
+//        for (byte b : tf.getByteArrayValue()) {
 //            System.out.printf("%02X ", b);
 //        }
-//        tf.valueOffsetBytes[1] = 0;
-        TiffOutputSet tos = tim.getOutputSet();
-        ExifRewriter er = new ExifRewriter();
-        String output_path = FileChooser.chooseFile(
-                System.getProperty("user.home"),
-                "請選擇影像檔", new String[]{"jpg", "jpg影像"}, "Save");
-        er.updateExifMetadataLossless(f, new FileOutputStream(output_path),
-                tos);
+        return tf.getIntValue();
+    }
 
-//        jip.
-//        List records = new ArrayList(), rawBlocks = new ArrayList();
-//        PhotoshopApp13Data pa13 = new PhotoshopApp13Data(records, rawBlocks);
-//        JpegPhotoshopMetadata jpm = new JpegPhotoshopMetadata(pa13);
-//        TiffHeader th = new TiffHeader(0, 0, 0);
-//        ArrayList dir = new ArrayList();
-//        TiffContents tc = new TiffContents(th, dir);
-//        TiffImageMetadata tim = new TiffImageMetadata(tc);
-//        JpegImageMetadata jim = new JpegImageMetadata(jpm, tim);
+
+    /*
+    1        2       3      4         5            6           7          8
+
+   888888  888888      88  88      8888888888  88                  88  8888888888
+   88          88      88  88      88  88      88  88          88  88      88  88
+   8888      8888    8888  8888    88          8888888888  8888888888          88
+   88          88      88  88
+   88          88  888888  888888
+     */
+    public void correctOrientation(byte orientation)
+            throws ImageReadException, ImageWriteException, Exception {
+
+        TiffOutputSet tos = tim.getOutputSet();
+        TagInfoShort o = new TagInfoShort("Orientation", 274, 1,
+                TiffDirectoryType.TIFF_DIRECTORY_ROOT);
+        tos.getRootDirectory().removeField(o);
+        tos.getRootDirectory().add(o, (short) 0);
+        ExifRewriter er = new ExifRewriter();
+        if (this.target_dir == null) {
+            this.target_dir = FileChooser.chooseFile(System.getProperty("user.home"),
+                    "請選擇影像檔", new String[]{"jpg", "jpg影像"}, "Save", src_file.getName());
+        }
+        er.updateExifMetadataLossless(src_file,
+                new FileOutputStream(this.target_dir + "\\ExifCorrected - " + src_file.getName()),
+                tos);
+    }
+
+    public List getAllFields() throws ImageReadException {
+        List data = tim.getAllFields();
+        data.forEach((t) -> {
+            System.out.println(t);
+        });
+        return data;
     }
 }

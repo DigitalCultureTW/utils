@@ -19,13 +19,15 @@ import static tw.digitalculture.utils.Constants.setFont;
 public class FileChooser {
 
     public static String chooseFile(String path, String title,
-            String[] filter, String button_text) throws Exception {
+            String[] filter, String button_text, String default_filename)
+            throws Exception {
         JFileChooser fc = new JFileChooser(path);
         fc.setPreferredSize(new Dimension(800, 600));
         setFont(fc.getComponents());
         fc.setLocation((SCREEN_SIZE.width - fc.getSize().width) / 2,
                 (SCREEN_SIZE.height - fc.getSize().height) / 2);
         fc.setDialogTitle(title);
+        fc.setName(default_filename);
         fc.setApproveButtonText(button_text);
         fc.setFileFilter(new FileFilter() {
             @Override
@@ -43,5 +45,11 @@ public class FileChooser {
             throw new Exception("使用者中止操作。");
         }
         return fc.getSelectedFile().getPath();
+
+    }
+
+    public static String chooseFile(String path, String title,
+            String[] filter, String button_text) throws Exception {
+        return chooseFile(path, title, filter, button_text, "");
     }
 }

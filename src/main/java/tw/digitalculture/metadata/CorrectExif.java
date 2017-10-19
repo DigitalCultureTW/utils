@@ -44,7 +44,7 @@ public class CorrectExif {
                 try {
                     CorrectExif ce = new CorrectExif(f, t);
                     int orientation = ce.getOrientation();
-                    ce.correctOrientation((byte) 0);
+                    ce.correctOrientation((short) 1);
                 } catch (Exception ex) {
                     Logger.getLogger(CorrectExif.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -53,6 +53,10 @@ public class CorrectExif {
 //        String dir = DirectoryReader.chooseFile(System.getProperty("user.home"),
 //                "請選擇影像檔", new String[]{"jpg", "jpg影像"}, "Open");
 //                   "C:\\Users\\Jonathan Chang\\Desktop\\competition\\大專組-第二名-A0118-楊天助-媽祖起駕.JPG";
+    }
+
+    public CorrectExif(String src_path) throws Exception {
+        this(new File(src_path), null);
     }
 
     public CorrectExif(File f, String t) throws Exception {
@@ -84,14 +88,14 @@ public class CorrectExif {
    88          88      88  88
    88          88  888888  888888
      */
-    public void correctOrientation(byte orientation)
+    public void correctOrientation(short orientation)
             throws ImageReadException, ImageWriteException, Exception {
 
         TiffOutputSet tos = tim.getOutputSet();
         TagInfoShort o = new TagInfoShort("Orientation", 274, 1,
                 TiffDirectoryType.TIFF_DIRECTORY_ROOT);
         tos.getRootDirectory().removeField(o);
-        tos.getRootDirectory().add(o, (short) 0);
+        tos.getRootDirectory().add(o, orientation);
         ExifRewriter er = new ExifRewriter();
         if (this.target_dir == null) {
             this.target_dir = FileChooser.chooseFile(System.getProperty("user.home"),

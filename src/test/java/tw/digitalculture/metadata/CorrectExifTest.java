@@ -7,9 +7,6 @@ package tw.digitalculture.metadata;
 
 import java.io.File;
 import java.util.List;
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

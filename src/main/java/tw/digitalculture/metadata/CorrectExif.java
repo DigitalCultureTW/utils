@@ -1,5 +1,6 @@
 package tw.digitalculture.metadata;
 
+import tw.digitalculture.utils.FileChooser;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.List;
@@ -14,8 +15,6 @@ import org.apache.commons.imaging.formats.jpeg.exif.ExifRewriter;
 import org.apache.commons.imaging.formats.tiff.TiffField;
 import org.apache.commons.imaging.formats.tiff.TiffImageMetadata;
 import org.apache.commons.imaging.formats.tiff.constants.TiffDirectoryType;
-import org.apache.commons.imaging.formats.tiff.fieldtypes.FieldType;
-import org.apache.commons.imaging.formats.tiff.taginfos.TagInfo;
 import org.apache.commons.imaging.formats.tiff.taginfos.TagInfoShort;
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
 import static tw.digitalculture.utils.Constants.chooseDir;
@@ -27,13 +26,12 @@ import tw.digitalculture.utils.DirectoryReader;
  */
 public class CorrectExif {
 
-    static String photo_path = System.getProperty("user.dir")
-            + "\\src\\main\\resources\\original_photo.JPG";
-
     File src_file;
     String target_dir;
     TiffImageMetadata tim;
     JpegImageParser jip = new JpegImageParser();
+    TagInfoShort o = new TagInfoShort("Orientation", 274, 1,
+            TiffDirectoryType.TIFF_DIRECTORY_ROOT);
 
     public static void main(String[] args) throws Exception {
         String d = chooseDir(System.getProperty("user.home"), "請選擇批次目錄");
@@ -50,9 +48,6 @@ public class CorrectExif {
                 }
             }
         });
-//        String dir = DirectoryReader.chooseFile(System.getProperty("user.home"),
-//                "請選擇影像檔", new String[]{"jpg", "jpg影像"}, "Open");
-//                   "C:\\Users\\Jonathan Chang\\Desktop\\competition\\大專組-第二名-A0118-楊天助-媽祖起駕.JPG";
     }
 
     public CorrectExif(String src_path) throws Exception {
@@ -60,7 +55,7 @@ public class CorrectExif {
     }
 
     public CorrectExif(File f, String t) throws Exception {
-        System.out.println("path=" + f.getPath());
+        System.out.println("Source file = " + f.getPath());
         this.src_file = f;
         this.target_dir = t;
         ByteSource bs = new ByteSourceFile(src_file);
@@ -68,13 +63,8 @@ public class CorrectExif {
     }
 
     public int getOrientation() throws ImageReadException {
-        TiffField tf = tim.findField(new TagInfo("Orientation", 274,
-                FieldType.SHORT) {
-        });
+        TiffField tf = tim.findField(o);
         System.out.println(tf);
-//        for (byte b : tf.getByteArrayValue()) {
-//            System.out.printf("%02X ", b);
-//        }
         return tf.getIntValue();
     }
 
@@ -88,12 +78,10 @@ public class CorrectExif {
    88          88      88  88
    88          88  888888  888888
      */
-    public void correctOrientation(short orientation)
+    public String correctOrientation(short orientation)
             throws ImageReadException, ImageWriteException, Exception {
 
         TiffOutputSet tos = tim.getOutputSet();
-        TagInfoShort o = new TagInfoShort("Orientation", 274, 1,
-                TiffDirectoryType.TIFF_DIRECTORY_ROOT);
         tos.getRootDirectory().removeField(o);
         tos.getRootDirectory().add(o, orientation);
         ExifRewriter er = new ExifRewriter();
@@ -101,16 +89,18 @@ public class CorrectExif {
             this.target_dir = FileChooser.chooseFile(System.getProperty("user.home"),
                     "請選擇影像檔", new String[]{"jpg", "jpg影像"}, "Save", src_file.getName());
         }
+        String out_path = this.target_dir + "\\ExifCorrected - " + src_file.getName();
         er.updateExifMetadataLossless(src_file,
-                new FileOutputStream(this.target_dir + "\\ExifCorrected - " + src_file.getName()),
+                new FileOutputStream(out_path),
                 tos);
+        return out_path;
     }
 
     public List getAllFields() throws ImageReadException {
         List data = tim.getAllFields();
-        data.forEach((t) -> {
-            System.out.println(t);
-        });
+//        data.forEach((t) -> {
+//            System.out.println(t);
+//        });
         return data;
     }
 }

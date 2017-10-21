@@ -17,7 +17,7 @@ import static tw.digitalculture.utils.Constants.*;
  */
 public class ProgressBarUtil extends JDialog {
 
-    private JProgressBar progressBar;
+    private final JProgressBar progressBar;
 
     public static void main(String[] args) {
         ProgressBarUtil pbu = new ProgressBarUtil("Title", "Description");
@@ -45,12 +45,12 @@ public class ProgressBarUtil extends JDialog {
     }
 
     public static void setFont(Component[] comp) {
-        for (int x = 0; x < comp.length; x++) {
-            if (comp[x] instanceof Container) {
-                setFont(((Container) comp[x]).getComponents());
+        for (Component c : comp) {
+            if (c instanceof Container) {
+                setFont(((Container) c).getComponents());
             }
             try {
-                comp[x].setFont(SYS_FONT);
+                c.setFont(SYS_FONT);
             } catch (Exception e) {
             }//do nothing
         }

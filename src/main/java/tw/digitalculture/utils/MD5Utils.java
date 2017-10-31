@@ -22,7 +22,8 @@ public class MD5Utils {
     public static void main(String[] avg) throws IOException {
         String str = null;
         try {
-            str = MD5Utils.getChecksum("D:\\Google Drive\\sound_clips-2015-09-04.zip");
+            str = MD5Utils.getChecksum("D:" + File.separator + "Google Drive"
+                    + File.separator + "sound_clips-2015-09-04.zip");
         } catch (NoSuchAlgorithmException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

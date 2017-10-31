@@ -48,7 +48,9 @@ public class ApplyTemplate {
 
     private List<String> applyTemplate(List<List<String>> table)
             throws FileNotFoundException, IOException, Exception {
-        File f = new File(System.getProperty("user.dir") + "\\src\\main\\resources\\template");
+        File f = new File(System.getProperty("user.dir")
+                + File.separator + "src" + File.separator + "main"
+                + File.separator + "resources" + File.separator + "template");
         String path = (f.exists()) ? f.getPath() : FileChooser.chooseFile(
                 System.getProperty("user.dir"), "請選擇樣版檔案",
                 new String[]{"", "樣版(String format)"}, "Open");

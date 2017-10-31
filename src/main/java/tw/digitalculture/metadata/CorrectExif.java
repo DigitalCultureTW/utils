@@ -89,7 +89,7 @@ public class CorrectExif {
             this.target_dir = FileChooser.chooseFile(System.getProperty("user.home"),
                     "請選擇影像檔", new String[]{"jpg", "jpg影像"}, "Save", src_file.getName());
         }
-        String out_path = this.target_dir + "\\ExifCorrected - " + src_file.getName();
+        String out_path = this.target_dir + File.separator + "ExifCorrected - " + src_file.getName();
         er.updateExifMetadataLossless(src_file,
                 new FileOutputStream(out_path),
                 tos);

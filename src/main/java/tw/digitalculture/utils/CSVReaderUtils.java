@@ -1,6 +1,7 @@
 package tw.digitalculture.utils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,7 +14,9 @@ import java.util.function.Consumer;
 public class CSVReaderUtils {
 
     public static void main(String[] args) throws IOException {
-        String path = System.getProperty("user.dir") + "\\src\\main\\resources\\demo.csv";
+        String path = System.getProperty("user.dir")
+                + File.separator + "src" + File.separator + "main"
+                + File.separator + "resources" + File.separator + "demo.csv";
         System.out.println("path = " + path);
         readFile(path, (List<List<String>> table) -> {
             System.out.println("table row = " + table.size());

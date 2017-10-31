@@ -143,7 +143,7 @@ public class Main {
             double progress = 0.0;
             ProgressBarUtil pb = new ProgressBarUtil(APP_TITLE, "處理中...");
             for (Item i : items) {
-                i.setChecksumMD5(MD5Utils.getChecksum(i.getPath() + "\\" + i.getFilename()));
+                i.setChecksumMD5(MD5Utils.getChecksum(i.getPath() + File.separator + i.getFilename()));
                 progress += progressUnit;
                 pb.setProgress((int) progress);
             }
@@ -161,7 +161,7 @@ public class Main {
         String csvFile, path;
         do {
             csvFile = JOptionPane.showInputDialog(null, "請輸入檔案名稱", "output");
-            path = csvDir + "\\" + csvFile + ".csv";
+            path = csvDir + File.separator + csvFile + ".csv";
         } while (dupeFile(path));
         int len = 0;
         if (new File(root).getParent() == null) {

@@ -17,7 +17,7 @@ import javax.swing.SwingConstants;
 public class Constants {
 
     public static final String APP_TITLE = "臺中學資料庫檔名批次匯入工具";
-    public static final String APP_VERSION = "1.01";
+    public static final String APP_VERSION = "1.02";
     public static final Font SYS_FONT = new Font(Font.MONOSPACED, Font.BOLD, 20);
     public static final Dimension SCREEN_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
 

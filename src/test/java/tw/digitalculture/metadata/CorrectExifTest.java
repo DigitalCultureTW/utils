@@ -20,7 +20,9 @@ import static org.junit.Assert.*;
  */
 public class CorrectExifTest {
 
-    String path = System.getProperty("user.dir") + "\\src\\main\\resources\\photo.JPG";
+    String path = System.getProperty("user.dir") + File.separator
+            + "src" + File.separator + "main" + File.separator
+            + "resources" + File.separator + "photo.JPG";
 
     public CorrectExifTest() {
     }

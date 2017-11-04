@@ -16,6 +16,7 @@ import tw.digitalculture.utils.DirectoryReader;
 import tw.digitalculture.utils.MD5Utils;
 import tw.digitalculture.utils.ProgressBarUtil;
 import static tw.digitalculture.utils.Constants.*;
+import tw.digitalculture.utils.OSDetector;
 
 /**
  * 臺中學資料庫檔名批次匯入工具
@@ -46,7 +47,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        messageWindow(APP_TITLE + ", 版本:" + APP_VERSION, 1500);
+        messageWindow(APP_TITLE + ", 版本:" + APP_VERSION, OSDetector.isMac() ? 3500 : 1500);
         LOGGER.log(Level.INFO, APP_TITLE + ", 版本:" + APP_VERSION);
         try {
             LOGGER.log(Level.INFO, "*** Reading Directories...");

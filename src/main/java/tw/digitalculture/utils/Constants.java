@@ -9,6 +9,7 @@ import java.awt.Frame;
 import java.awt.Toolkit;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JWindow;
 import javax.swing.SwingConstants;
 
@@ -20,9 +21,9 @@ public class Constants {
 
     public static final String APP_TITLE = "臺中學資料庫檔名批次匯入工具";
     public static final String APP_VERSION = "1.03";
-    public static final Font SYS_FONT = (OSDetector.isMac())?
-            new Font(Font.MONOSPACED, Font.PLAIN, 14)
-            :new Font(Font.MONOSPACED, Font.BOLD, 20);
+    public static final Font SYS_FONT = (OSDetector.isMac())
+            ? new Font(Font.MONOSPACED, Font.PLAIN, 14)
+            : new Font(Font.MONOSPACED, Font.BOLD, 20);
     public static final Dimension SCREEN_SIZE = Toolkit.getDefaultToolkit().getScreenSize();
 
     public static void setFont(Component[] comp) {
@@ -78,8 +79,9 @@ public class Constants {
     }
 
     public static String chooseDirFileDialog(String path, String title) throws Exception {
+        JOptionPane.showMessageDialog(null, title, APP_TITLE, JOptionPane.INFORMATION_MESSAGE);
         System.setProperty("apple.awt.fileDialogForDirectories", "true");
-        FileDialog fd = new FileDialog((Frame) null, title, FileDialog.LOAD);
+        FileDialog fd = new FileDialog(new Frame(), title, FileDialog.LOAD);
         fd.setPreferredSize(new Dimension(800, 600));
         setFont(fd.getComponents());
         fd.setLocation((SCREEN_SIZE.width - fd.getSize().width) / 2, (SCREEN_SIZE.height - fd.getSize().height) / 2);

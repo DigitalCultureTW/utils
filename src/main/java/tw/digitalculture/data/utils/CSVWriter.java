@@ -25,13 +25,9 @@ package tw.digitalculture.data.utils;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -40,91 +36,70 @@ import java.util.List;
  */
 public class CSVWriter {
 
-     private static final char DEFAULT_SEPARATOR = ',';
+    private static final char DEFAULT_SEPARATOR = ',';
+    private static final String prefix = System.getProperty("user.home") + File.separatorChar;
+    private final String filename;
 
-     public static void main(String[] args) throws Exception {
+    public CSVWriter(String filename) {
+        this.filename = prefix + filename;
+    }
 
-          String csvFile = System.getProperty("user.home") + "/abc.csv";
-          try (FileWriter writer = new FileWriter(csvFile)) {
-               CSVWriter.writeLine(writer, Arrays.asList("a", "b", "c", "d"));
+    public void write(List<List<String>> data) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(filename);
+                OutputStreamWriter osw = new OutputStreamWriter(fos, "utf8")) {
+            for (List<String> row : data) {
+                writeLine(osw, row, DEFAULT_SEPARATOR, '"');
+            }
+            osw.flush();
+        }
+    }
 
-               //custom separator + quote
-               CSVWriter.writeLine(writer, Arrays.asList("aaa", "bb,b", "cc,c"), ',', '"');
+    private static String followCVSformat(String value) {
 
-               //custom separator + quote
-               CSVWriter.writeLine(writer, Arrays.asList("aaa", "bbb", "cc,c"), '|', '\'');
+        String result = value;
+        if (result.contains("\"")) {
+            result = result.replace("\"", "\"\"");
+        }
+        return result;
 
-               //double-quotes
-               CSVWriter.writeLine(writer, Arrays.asList("aaa", "bbb", "cc\"c"));
+    }
 
-               writer.flush();
-          }
+    static boolean first = true;
 
-     }
+    public static void writeLine(Writer w, List<String> values, char separators, char customQuote)
+            throws IOException {
 
-     private final String filename;
+        StringBuilder sb = new StringBuilder();
+        values.forEach((value) -> {
+            if (!first) {
+                sb.append(separators);
+            }
+            if (customQuote == ' ') {
+                sb.append(followCVSformat(value));
+            } else {
+                sb.append(customQuote).append(followCVSformat(value)).append(customQuote);
+            }
 
-     public CSVWriter(String filename) {
-          this.filename = filename;
-     }
-// new OutputStreamWriter(
+            first = false;
 
-     public void write(List<List<String>> data) throws IOException {
-          try (FileOutputStream fos = new FileOutputStream(System.getProperty("user.home") + File.separatorChar + filename);
-                  OutputStreamWriter osw = new OutputStreamWriter(fos, "utf8")) {
-               for (List<String> row : data) {
-                    writeLine(osw, row, ',', '"');
-               }
-               osw.flush();
-          }
-     }
+        });
+        for (String value : values) {
+            if (!first) {
+                sb.append(separators);
+            }
+            if (customQuote == ' ') {
+                sb.append(followCVSformat(value));
+            } else {
+                sb.append(customQuote).append(followCVSformat(value)).append(customQuote);
+            }
 
-     public static void writeLine(Writer w, List<String> values) throws IOException {
-          writeLine(w, values, DEFAULT_SEPARATOR, ' ');
-     }
+            first = false;
+        }
 
-     public static void writeLine(Writer w, List<String> values, char separators) throws IOException {
-          writeLine(w, values, separators, ' ');
-     }
+        //System.out.println(sb.toString());  // Console output
+        sb.append("\n");
+        w.append(sb.toString());
 
-     //https://tools.ietf.org/html/rfc4180
-     private static String followCVSformat(String value) {
-
-          String result = value;
-          if (result.contains("\"")) {
-               result = result.replace("\"", "\"\"");
-          }
-          return result;
-
-     }
-
-     public static void writeLine(Writer w, List<String> values, char separators, char customQuote) throws IOException {
-
-          boolean first = true;
-
-          //default customQuote is empty
-          if (separators == ' ') {
-               separators = DEFAULT_SEPARATOR;
-          }
-
-          StringBuilder sb = new StringBuilder();
-          for (String value : values) {
-               if (!first) {
-                    sb.append(separators);
-               }
-               if (customQuote == ' ') {
-                    sb.append(followCVSformat(value));
-               } else {
-                    sb.append(customQuote).append(followCVSformat(value)).append(customQuote);
-               }
-
-               first = false;
-          }
-
-          //System.out.println(sb.toString());  // Console output
-          sb.append("\n");
-          w.append(sb.toString());
-
-     }
+    }
 
 }

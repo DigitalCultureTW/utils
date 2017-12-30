@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package tw.digitalculture.data.interfaces;
+package tw.digitalculture.data.model;
 
 import org.apache.commons.io.FilenameUtils;
 

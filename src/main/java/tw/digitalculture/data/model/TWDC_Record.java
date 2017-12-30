@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import tw.digitalculture.data.interfaces.Record;
 
 /**
  *

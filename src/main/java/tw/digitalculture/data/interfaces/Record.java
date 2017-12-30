@@ -35,26 +35,25 @@ public abstract class Record {
     public String title;
     public String description;
     public String uri;
-    public String filename;
-    public String filetype;
 
     public Record(String id, String title, String description, String uri) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.uri = uri;
-        setFilename();
-        setFiletype();
     }
+
     public Record(int id, String title, String description, String uri) {
         this(String.valueOf(id), title, description, uri);
     }
-    public void setFilename() {
-        this.filename = this.uri.contains("/")
+
+    public String getFilename() {
+        return this.uri.contains("/")
                 ? this.uri.split("/")[this.uri.split("/").length - 1] : "";
     }
 
-    public void setFiletype() {
-        this.filetype = FilenameUtils.getExtension(this.uri).toLowerCase();
+    public String getFileType() {
+        return FilenameUtils.getExtension(this.uri).toLowerCase();
     }
+
 }

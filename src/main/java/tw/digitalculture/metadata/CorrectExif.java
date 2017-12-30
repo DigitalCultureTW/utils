@@ -30,8 +30,7 @@ public class CorrectExif {
     String target_dir;
     TiffImageMetadata tim;
     JpegImageParser jip = new JpegImageParser();
-    TagInfoShort o = new TagInfoShort("Orientation", 274, 1,
-            TiffDirectoryType.TIFF_DIRECTORY_ROOT);
+    TagInfoShort o = new TagInfoShort("Orientation", 274, TiffDirectoryType.TIFF_DIRECTORY_ROOT);
 
     public static void main(String[] args) throws Exception {
         String d = chooseDir(System.getProperty("user.home"), "請選擇批次目錄");

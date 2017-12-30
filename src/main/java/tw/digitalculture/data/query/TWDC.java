@@ -46,54 +46,54 @@ import tw.digitalculture.data.utils.CSVWriter;
  */
 public class TWDC {
 
-     private static List<TWDC_Record> dataset;
+    private static List<TWDC_Record> dataset;
 
-     public static void main(String[] args) {
-          new TWDC((TWDC t) -> {
-               try {
-                    CSVWriter cw = new CSVWriter("twdc_output.csv");
-                    List<List<String>> data = new ArrayList<>();
-                    dataset.forEach((TWDC_Record r) -> {
-                         data.add(Arrays.asList(new String[]{r.title, r.description, r.rights}));
-                    });
-                    cw.write(data);
-               } catch (IOException ex) {
-                    Logger.getLogger(TWDC.class.getName()).log(Level.SEVERE, null, ex);
-               }
-          });
-     }
+    public static void main(String[] args) {
+        new TWDC((TWDC t) -> {
+            try {
+                CSVWriter cw = new CSVWriter("twdc_output.csv");
+                List<List<String>> data = new ArrayList<>();
+                dataset.forEach((TWDC_Record r) -> {
+                    data.add(Arrays.asList(new String[]{r.title, r.description, r.rights}));
+                });
+                cw.write(data);
+            } catch (IOException ex) {
+                Logger.getLogger(TWDC.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+    }
 
-     public TWDC(Consumer<TWDC> callback) {
-          TWDC.dataset = new ArrayList<>();
-          refresh(URL_BASE, (ok) -> {
-               callback.accept(ok ? this : null);
-          });
-     }
+    public TWDC(Consumer<TWDC> callback) {
+        TWDC.dataset = new ArrayList<>();
+        refresh(URL_BASE, (ok) -> {
+            callback.accept(ok ? this : null);
+        });
+    }
 
-     public static void refresh(String url, Consumer<Boolean> callback) {
+    public static void refresh(String url, Consumer<Boolean> callback) {
 
-          TWDC_XML.fetch(url, (Document data) -> {
-               Elements xml_records = data.getElementsByTag("record");
-               System.out.println("processing " + xml_records.size() + " records...");
-               for (Element rec : xml_records) {
-                    TWDC_Record record = new TWDC_Record(
-                            rec.getElementsByTag("header"),
-                            rec.getElementsByTag("metadata"));
-                    if (!record.uri.isEmpty()) {
-//                            && FILETYPES.contains(record.filetype.toLowerCase())) {
-                         dataset.add(record);
-//                    System.out.println(dataset.size() + ". " + record.title);
-                    }
-               }
-               String resumptionToken = data.getElementsByTag("resumptionToken").text();
-               if (resumptionToken.isEmpty()) {
-                    System.out.println(
-                            "Initializing twdc dataset completed. Total record fetched = " + dataset.size());
-                    callback.accept(Boolean.TRUE);
-               } else {
-                    refresh(DATA.TWDC.URL_TOKEN + resumptionToken, callback);
-               }
-          });
-     }
+        TWDC_XML.fetch(url, (Document data) -> {
+            Elements xml_records = data.getElementsByTag("record");
+            System.out.println("processing " + xml_records.size() + " records...");
+            xml_records.forEach((rec) -> {
+                TWDC_Record record = new TWDC_Record(
+                        rec.getElementsByTag("header"),
+                        rec.getElementsByTag("metadata"));
+            // if (!record.uri.isEmpty() && FILETYPES.contains(record.filetype.toLowerCase())) {
+                dataset.add(record);
+                System.out.println(dataset.size() + ". " + record.title);
+            // }
+            });
+            String resumptionToken = data.getElementsByTag("resumptionToken").text();
+            if (resumptionToken.isEmpty()) {
+                System.out.println(
+                        "Initializing twdc dataset completed. Total record fetched = " + dataset.size());
+                callback.accept(Boolean.TRUE);
+            } else {
+                refresh(DATA.TWDC.URL_TOKEN + resumptionToken, callback);
+            }
+        }
+        );
+    }
 
 }

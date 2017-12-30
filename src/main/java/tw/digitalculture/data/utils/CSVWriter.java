@@ -37,11 +37,11 @@ import java.util.List;
 public class CSVWriter {
 
     private static final char DEFAULT_SEPARATOR = ',';
-    private static final String prefix = System.getProperty("user.home") + File.separatorChar;
+    private static final String PREFIX = System.getProperty("user.home") + File.separatorChar;
     private final String filename;
 
     public CSVWriter(String filename) {
-        this.filename = prefix + filename;
+        this.filename = PREFIX + filename;
     }
 
     public void write(List<List<String>> data) throws IOException {
@@ -54,7 +54,7 @@ public class CSVWriter {
         }
     }
 
-    private static String followCVSformat(String value) {
+    private static String followCSVformat(String value) {
 
         String result = value;
         if (result.contains("\"")) {
@@ -64,42 +64,22 @@ public class CSVWriter {
 
     }
 
-    static boolean first = true;
-
     public static void writeLine(Writer w, List<String> values, char separators, char customQuote)
             throws IOException {
 
         StringBuilder sb = new StringBuilder();
         values.forEach((value) -> {
-            if (!first) {
+            if (sb.length() > 0) {
                 sb.append(separators);
             }
             if (customQuote == ' ') {
-                sb.append(followCVSformat(value));
+                sb.append(followCSVformat(value));
             } else {
-                sb.append(customQuote).append(followCVSformat(value)).append(customQuote);
+                sb.append(customQuote).append(followCSVformat(value)).append(customQuote);
             }
-
-            first = false;
-
         });
-        for (String value : values) {
-            if (!first) {
-                sb.append(separators);
-            }
-            if (customQuote == ' ') {
-                sb.append(followCVSformat(value));
-            } else {
-                sb.append(customQuote).append(followCVSformat(value)).append(customQuote);
-            }
-
-            first = false;
-        }
-
-        //System.out.println(sb.toString());  // Console output
         sb.append("\n");
         w.append(sb.toString());
-
     }
 
 }

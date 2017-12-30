@@ -35,45 +35,48 @@ import org.jsoup.select.Elements;
  */
 public class TWDC_Record extends Record {
 
-     public List<String> subjects = new ArrayList<>();
-     public String rights;
+    public List<String> subjects = new ArrayList<>();
+    public Rights rights;
 
-     public TWDC_Record(Elements header, Elements metadata) {
-          super(header.select("identifier").text(),
-                  metadata.select("dc|title").text(),
-                  metadata.select("dc|description").stream().map((Element t)
-                          -> t.text().startsWith("http://") ? "" : t.text())
-                          .collect(Collectors.joining()),
-                  metadata.select("dc|description").stream().map((Element t)
-                          -> t.text().startsWith("http://") ? t.text() : "")
-                          .collect(Collectors.joining()));
-          rights = metadata.select("dc|rights").text();
-     }
+    public TWDC_Record(Elements header, Elements metadata) {
+        super(metadata.select("dc|identifier").text(),
+                metadata.select("dc|title").text(),
+                metadata.select("dc|description").stream().map((Element t)
+                        -> t.text().startsWith("http://") ? "" : t.text())
+                        .collect(Collectors.joining()),
+                metadata.select("dc|description").stream().map((Element t)
+                        -> t.text().startsWith("http://") ? t.text() : "")
+                        .collect(Collectors.joining()));
+        this.rights = Rights.fromURI(metadata.select("dc|rights").text());
+        if (this.rights == null) {
+            System.out.println(metadata.select("dc|rights").text());
+        }
+    }
 
-     public String contains(String keyword) {
+    public String contains(String keyword) {
 
-          String result = "";
+        String result = "";
 
-          if (this.subjects.size() > 0) {
-               for (int index = 0; index < this.subjects.size(); index++) {
-                    if (this.subjects.get(index).contains(keyword)) {
-                         result = this.subjects.get(index);
-                    }
-               }
-               if (!result.isEmpty()) {
-                    result += ':' + this.title + '。' + this.description;
-               }
-          }
-          if (this.title.contains(keyword)) {
-               result = this.title + '。' + this.description;
-          } else if (this.description.contains(keyword)) {
-               result = this.description;
-          }
-          return result;
-     }
+        if (this.subjects.size() > 0) {
+            for (int index = 0; index < this.subjects.size(); index++) {
+                if (this.subjects.get(index).contains(keyword)) {
+                    result = this.subjects.get(index);
+                }
+            }
+            if (!result.isEmpty()) {
+                result += ':' + this.title + '。' + this.description;
+            }
+        }
+        if (this.title.contains(keyword)) {
+            result = this.title + '。' + this.description;
+        } else if (this.description.contains(keyword)) {
+            result = this.description;
+        }
+        return result;
+    }
 
-     @Override
-     public String toString() {
-          return this.title + "," + this.description + "," + this.rights;
-     }
+    @Override
+    public String toString() {
+        return this.title + "," + this.description + "," + this.rights;
+    }
 }

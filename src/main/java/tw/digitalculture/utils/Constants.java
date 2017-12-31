@@ -1,10 +1,3 @@
-package tw.digitalculture.utils;
-
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FileDialog;
-import java.awt.Font;
 /*
  * The MIT License
  *
@@ -28,6 +21,13 @@ import java.awt.Font;
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package tw.digitalculture.utils;
+
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FileDialog;
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Toolkit;
 import javax.swing.JFileChooser;
@@ -38,7 +38,7 @@ import javax.swing.SwingConstants;
 
 /**
  *
- * @author Jonathan Chang
+ * @author Jonathan Chang, Chun-yien <ccy@musicapoetica.org>
  */
 public class Constants {
 

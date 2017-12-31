@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package tw.digitalculture.data.config;
+package tw.digitalculture.data;
 
 import java.util.Arrays;
 import java.util.List;

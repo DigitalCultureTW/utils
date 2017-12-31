@@ -27,10 +27,10 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
-import tw.digitalculture.data.config.Config.DATA;
+import tw.digitalculture.data.Config.DATA;
 import tw.digitalculture.data.bin.TWDC_XML;
 import tw.digitalculture.data.model.TWDC_Record;
-import static tw.digitalculture.data.config.Config.DATA.TWDC.URL_BASE;
+import static tw.digitalculture.data.Config.DATA.TWDC.URL_BASE;
 
 /**
  *

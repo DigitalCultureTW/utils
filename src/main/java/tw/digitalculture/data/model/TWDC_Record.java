@@ -36,6 +36,7 @@ import org.jsoup.select.Elements;
 public class TWDC_Record extends Record {
 
     public List<String> subjects = new ArrayList<>();
+    public String contributor;
     public Rights rights;
 
     public TWDC_Record(Elements header, Elements metadata) {
@@ -47,10 +48,8 @@ public class TWDC_Record extends Record {
                 metadata.select("dc|description").stream().map((Element t)
                         -> t.text().startsWith("http://") ? t.text() : "")
                         .collect(Collectors.joining()));
+        this.contributor = metadata.select("dc|contributor").text();
         this.rights = Rights.fromURI(metadata.select("dc|rights").text());
-        if (this.rights == null) {
-            System.out.println(metadata.select("dc|rights").text());
-        }
     }
 
     public String contains(String keyword) {

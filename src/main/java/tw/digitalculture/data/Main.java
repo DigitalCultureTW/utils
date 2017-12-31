@@ -1,15 +1,33 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * The MIT License
+ *
+ * Copyright 2017 Jonathan Chang, Chun-yien <ccy@musicapoetica.org>.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 package tw.digitalculture.data;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
@@ -30,12 +48,49 @@ public class Main {
     static TWDC twdc;
     static int count;
     static String template = "twdc_template";
-    static String filename = "twdc_output";
+    static String statistics = "twdc_statistics";
+    static String report = "twdc_report";
 
     public static void main(String[] args) throws IOException, Exception {
         twdc = new TWDC();
         twdc.dataset.sort(new RightsComparator());
+        createStatistics();
         createParagraph();
+    }
+
+    public static void createStatistics() throws IOException {
+        class Data {
+
+            int[] in = new int[Rights.values().length];
+            int[] out = new int[Rights.values().length];
+        }
+        Data d = new Data();
+        twdc.dataset.forEach(rec -> {
+            if (rec.contributor.contains("臺中市政府")) {
+                d.in[rec.rights.ordinal()]++;
+            } else {
+                d.out[rec.rights.ordinal()]++;
+                System.out.println(rec.title);
+            }
+        });
+        try (XWPFDocument doc = new XWPFDocument()) {
+            XWPFTable table = doc.createTable(1, 2);
+            table.getRow(0).getCell(0).setText("府內物件授權狀態統計");
+            for (Rights right : Rights.values()) {
+                XWPFTableRow row = table.createRow();
+                row.getCell(0).setText(right.full_label);
+                row.getCell(1).setText("" + d.in[right.ordinal()]);
+            }
+            table.createRow().getCell(0).setText("府外物件授權狀態統計");
+            for (Rights right : Rights.values()) {
+                XWPFTableRow row = table.createRow();
+                row.getCell(0).setText(right.full_label);
+                row.getCell(1).setText("" + d.out[right.ordinal()]);
+            }
+            try (FileOutputStream fos = new FileOutputStream(statistics + ".docx")) {
+                doc.write(fos);
+            }
+        }
     }
 
     /**
@@ -44,6 +99,7 @@ public class Main {
      * @throws java.lang.Exception
      */
     public static void createParagraph() throws Exception {
+        count = 0;
         try (XWPFDocument doc = new XWPFDocument()) {
 
             //create paragraph
@@ -76,16 +132,17 @@ public class Main {
                 }
                 p2.addBreak();
 
-                count(rec.rights);
+                countCopyrighted(rec.rights);
             }
-            try (FileOutputStream fos = new FileOutputStream(filename + ".docx")) {
+            try (FileOutputStream fos = new FileOutputStream(report + ".docx")) {
                 doc.write(fos);
             }
         }
-//        System.out.println("CC = " + count);
+        System.out.println("CC = " + count);
     }
 
     public static void createTable() throws Exception {
+        count = 0;
         try (XWPFDocument doc = new XWPFDocument()) {
             XWPFTable table = doc.createTable();
             int r = 0;
@@ -113,9 +170,9 @@ public class Main {
                 row = table.createRow();
                 row.getCell(0).setText(rec.description);
                 r++;
-                count(rec.rights);
+                countCopyrighted(rec.rights);
             }
-            try (FileOutputStream fos = new FileOutputStream(filename + ".docx")) {
+            try (FileOutputStream fos = new FileOutputStream(report + ".docx")) {
                 doc.write(fos);
             }
         }
@@ -123,22 +180,25 @@ public class Main {
     }
 
     public static void createCSV() throws IOException {
+        count = 0;
         CSVWriter cw = new CSVWriter("twdc_output.csv");
-        List<List<String>> data = new ArrayList<>();
-        twdc.dataset.forEach((TWDC_Record row) -> {
-            count(row.rights);
-            data.add(Arrays.asList(new String[]{
-                row.id,
-                row.title,
-                row.description,
-                row.rights.short_label
-            }));
-        });
+        List<List<String>> data
+                = twdc.dataset.stream().map(Main::recToStringList).collect(Collectors.toList());
         System.out.println("CC = " + count);
         cw.write(data);
     }
 
-    public static void count(Rights rec) {
+    private static List<String> recToStringList(TWDC_Record row) {
+        countCopyrighted(row.rights);
+        return Arrays.asList(new String[]{
+            row.id,
+            row.title,
+            row.description,
+            row.rights.short_label
+        });
+    }
+
+    public static void countCopyrighted(Rights rec) {
         if (!rec.equals(Rights.COPYRIGHTED)) {
             count++;
         }
